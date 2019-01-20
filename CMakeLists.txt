@@ -1,0 +1,61 @@
+cmake_minimum_required(VERSION 3.13)
+project(Mines_Archi LANGUAGES CXX)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+
+if(CMAKE_COMPILER_IS_GNUXX)
+    message(STATUS "GCC detected, adding compile flags")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -openmp")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3  -march=native -mavx")
+else()
+    message(STATUS "MSVC detected, adding compile flags")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -arch:AVX2 /favor:INTEL64 /MD")
+endif()
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
+find_package(OpenMP REQUIRED)
+if (OPENMP_FOUND)
+    message(STATUS "OpenMP Found !")
+endif()
+
+include(CheckLanguage)
+check_language(CUDA)
+if(CMAKE_CUDA_COMPILER)
+    message(STATUS "Cuda Found !")
+    enable_language(CUDA)
+    if(NOT DEFINED CMAKE_CUDA_STANDARD)
+        set(CMAKE_CUDA_STANDARD 11)
+        set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    endif()
+else()
+    message(STATUS "Cuda Not Found :( !")
+endif()
+
+
+set(SOURCES main.cpp cmd_parser.cpp cmd_parser.h sequential.h sequential.cpp parallel.cpp parallel.h vectorial.cpp vectorial.h utils.h gpu.cu gpu.h)
+
+add_executable(Mines_Archi ${SOURCES})
+target_link_libraries(Mines_Archi PRIVATE OpenMP::OpenMP_CXX)
+
+if(CMAKE_CUDA_COMPILER)
+    set_target_properties(Mines_Archi PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(Mines_Archi PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    target_compile_definitions(Mines_Archi PRIVATE CUDA_AVAILABLE)
+endif()
+
+add_executable(Mines_Archi_aligned ${SOURCES})
+target_compile_definitions(Mines_Archi_aligned PRIVATE FORCE_ALIGNED)
+target_link_libraries(Mines_Archi_aligned PRIVATE OpenMP::OpenMP_CXX)
+if(CMAKE_CUDA_COMPILER)
+    set_target_properties(Mines_Archi_aligned PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(Mines_Archi_aligned PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    target_compile_definitions(Mines_Archi_aligned PRIVATE CUDA_AVAILABLE)
+endif()
+
+#add_custom_target(run_test_all run_test_1)
+#add_dependencies(run_test_all run_test_1)
