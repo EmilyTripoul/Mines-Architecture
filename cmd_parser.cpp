@@ -4,6 +4,7 @@
 
 #include "cmd_parser.h"
 #include <ctype.h>
+#include <algorithm>
 
 
 const std::string CmdParser::empty_string;

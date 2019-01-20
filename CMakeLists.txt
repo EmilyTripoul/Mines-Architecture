@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     message(STATUS "MSVC detected, adding compile flags")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS_RELEASE "-O2 -arch:AVX2 /favor:INTEL64 /MD")
 else()
     message(STATUS "GCC detected, adding compile flags")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -openmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3  -march=native -mavx")
 endif()
 
@@ -23,6 +23,16 @@ if (OPENMP_FOUND)
     message(STATUS "OpenMP Found !")
 endif()
 
+function(CUDA_CONVERT_FLAGS EXISTING_TARGET)
+    get_property(old_flags TARGET ${EXISTING_TARGET} PROPERTY INTERFACE_COMPILE_OPTIONS)
+    if(NOT "${old_flags}" STREQUAL "")
+        string(REPLACE ";" "," CUDA_flags "${old_flags}")
+        set_property(TARGET ${EXISTING_TARGET} PROPERTY INTERFACE_COMPILE_OPTIONS
+            "$<$<BUILD_INTERFACE:$<COMPILE_LANGUAGE:CXX>>:${old_flags}>$<$<BUILD_INTERFACE:$<COMPILE_LANGUAGE:CUDA>>:-Xcompiler=${CUDA_flags}>"
+            )
+    endif()
+message(ERROR ${old_flags})
+endfunction()
 include(CheckLanguage)
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
@@ -32,16 +42,16 @@ if(CMAKE_CUDA_COMPILER)
         set(CMAKE_CUDA_STANDARD 11)
         set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     endif()
+
+    CUDA_CONVERT_FLAGS(OpenMP::OpenMP_CXX)
 else()
     message(STATUS "Cuda Not Found :( !")
 endif()
 
-
 set(SOURCES main.cpp cmd_parser.cpp cmd_parser.h sequential.h sequential.cpp parallel.cpp parallel.h vectorial.cpp vectorial.h utils.h gpu.cu gpu.h)
 
 add_executable(Mines_Archi ${SOURCES})
-target_link_libraries(Mines_Archi PRIVATE OpenMP::OpenMP_CXX)
-
+target_link_libraries(Mines_Archi PUBLIC OpenMP::OpenMP_CXX)
 if(CMAKE_CUDA_COMPILER)
     set_target_properties(Mines_Archi PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set_target_properties(Mines_Archi PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

@@ -13,7 +13,7 @@ namespace sequential {
     float gm(const float *U, const float *V, float a, int k, unsigned int n) {
         float accumulateSum = 0, accumulateDiv = 0;
         for (unsigned int i = 0; i < n; i++) {
-            accumulateSum += std::powf(V[i] * U[i] - a, static_cast<float>(k));
+            accumulateSum += std::pow(V[i] * U[i] - a, static_cast<float>(k));
             accumulateDiv += V[i];
         }
         return accumulateSum / accumulateDiv;
