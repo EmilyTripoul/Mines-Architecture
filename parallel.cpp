@@ -5,6 +5,7 @@
 #include "parallel.h"
 #include <omp.h>
 #include "utils.h"
+#include <mutex>
 using namespace utils;
 
 namespace parallel {

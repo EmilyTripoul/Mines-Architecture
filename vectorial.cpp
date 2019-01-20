@@ -4,6 +4,7 @@
 
 #include "vectorial.h"
 #include "utils.h"
+#include <mutex>
 
 using namespace utils;
 

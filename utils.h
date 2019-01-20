@@ -5,7 +5,6 @@
 
 #include <immintrin.h>
 #include <numeric>
-#include <execution>
 #include <algorithm>
 #include <vector>
 #include <thread>
